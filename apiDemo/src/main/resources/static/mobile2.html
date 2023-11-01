@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Store Management</title>
+    <style>
+        /* Basic styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #0F6C88;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        h1 {
+        	color: white; /* Change the title color to white */
+        	text-align: center; /* Center the title */
+        }
+        /* Add the styles here */
+        h2 {
+            color: white;
+            text-align: center; /* Center the "Mobiles List" heading */
+            margin-bottom: 20px; /* Add some spacing below the heading */
+        }
+
+        table {
+            margin: 0 auto; /* Center the table horizontally */
+        }
+         /* Change the color of the mobile list */
+    	#mobileList {
+        	background-color: lightgrey;
+    	}
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        form {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: skyblue;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        form input[type="text"],
+        form input[type="number"] {
+            width: 95%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        form button[type="submit"] {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        form button[type="submit"]:hover {
+            background-color: #45a049;
+        }
+ 
+         /* Style for delete message container */
+        #addMessage {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 100%;
+            padding: 10px;
+            background-color: #e2f0d9;
+            border: 1px solid #96c178;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+            display: none; /* Hide by default */
+        }
+        /* Style for delete message container */
+        #deleteMessage {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 100%;
+            padding: 10px;
+            background-color: yellow;
+            border: 1px solid #96c178;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+            display: none; /* Hide by default */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Mobile Store Management</h1>
+        
+        <!-- Form to add new mobile -->
+        <form id="addMobileForm">
+            <input type="text" id="mobileId" placeholder="Mobile ID" required>
+            <input type="text" id="mobileCompany" placeholder="Mobile Company" required>
+            <input type="text" id="mobileModel" placeholder="Mobile Model" required>
+            <input type="number" id="mobilePrice" placeholder="Mobile Price" required>
+            <button type="submit">Add Mobile</button>
+        </form>
+        
+        <!-- Table to list mobiles -->
+        <h2>Mobiles List</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Company</th>
+                    <th>Model</th>
+                    <th>Price</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="mobileList">
+                <!-- Mobiles will be listed here dynamically -->
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Add the Add Mobile message div here -->
+    <div id="addMessage" style="color: green;"></div>
+    
+    <!-- Add the delete message div here -->
+    <div id="deleteMessage" style="color: green;"></div>
+
+    <script>
+        const addMobileForm = document.getElementById("addMobileForm");
+        const mobileList = document.getElementById("mobileList");
+
+        // Function to fetch and update mobile list
+        async function fetchAndUpdateMobileList() {
+            try {
+                const response = await fetch('/mobile'); // Change the URL to your backend endpoint
+                const data = await response.json();
+
+                mobileList.innerHTML = ''; // Clear the existing list
+
+                data.forEach(mobile => {
+                    const newRow = `
+                        <tr>
+                            <td>${mobile.mobile_id}</td>
+                            <td>${mobile.mobile_company}</td>
+                            <td>${mobile.mobile_model}</td>
+                            <td>${mobile.mobile_price}</td>
+                            <td><button class="deleteBtn">Delete</button></td>
+                        </tr>
+                    `;
+
+                    mobileList.innerHTML += newRow;
+                });
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        // Submit form to add new mobile
+        addMobileForm.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const mobileId = document.getElementById("mobileId").value;
+            const mobileCompany = document.getElementById("mobileCompany").value;
+            const mobileModel = document.getElementById("mobileModel").value;
+            const mobilePrice = document.getElementById("mobilePrice").value;
+
+            const newMobile = {
+                mobile_id: mobileId,
+                mobile_company: mobileCompany,
+                mobile_model: mobileModel,
+                mobile_price: parseInt(mobilePrice) // Convert to integer
+            };
+
+            try {
+                const response = await fetch('/mobile', {  // Change the URL to your backend endpoint
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(newMobile)
+                });
+
+                if (response.ok) {
+                	showAddSuccessMessage(); // Show the add success message
+                    fetchAndUpdateMobileList(); // Update the mobile list
+                    addMobileForm.reset();
+                } else {
+                    console.error('Failed to add mobile');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+
+        // Fetch and update the mobile list when the page loads
+        fetchAndUpdateMobileList();
+
+        // Handle delete buttons
+       mobileList.addEventListener("click", async function (event) {
+    	if (event.target.classList.contains("deleteBtn")) {
+        	const row = event.target.closest("tr");
+        	const mobileId = row.querySelector("td:first-child").textContent;
+
+        	try {
+            	const response = await fetch(`/mobile/${mobileId}`, {
+                method: 'DELETE'
+            	});
+
+            if (response.ok) {
+                row.remove(); // Remove the deleted mobile from the UI
+                showDeleteSuccessMessage();
+            } else {
+                console.error('Failed to delete mobile');
+            }
+        	} catch (error) {
+            console.error('Error:', error);
+        	}
+    		}
+		});
+        
+       function showAddSuccessMessage() {
+    	    const addMessage = document.getElementById("addMessage");
+    	    addMessage.textContent = "Mobile added successfully!";
+    	    addMessage.style.display = "block"; // Show the message
+
+    	    setTimeout(() => {
+    	        addMessage.textContent = "";
+    	        addMessage.style.display = "none"; // Hide the message
+    	    }, 5000); // Clear message after 5 seconds
+    	}
+
+	function showDeleteSuccessMessage() {
+    	const deleteMessage = document.getElementById("deleteMessage");
+    	deleteMessage.textContent = "Mobile deleted successfully!";
+    	deleteMessage.style.display = "block"; // Show the message
+    	
+    	setTimeout(() => {
+        	deleteMessage.textContent = "";
+   		 }, 3000); // Clear message after 3 seconds
+	}
+        
+    </script>
+</body>
+</html>
